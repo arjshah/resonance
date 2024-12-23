@@ -173,3 +173,15 @@ resonance/
 - Built with [Next.js](https://nextjs.org/) and [Tailwind CSS](https://tailwindcss.com/)
 - UI components from [shadcn/ui](https://ui.shadcn.com/)
 
+## 📸 Screenshots
+
+<div align="center">
+  <h3>Dashboard Overview</h3>
+  <img src="public/docs/screenshots/dashboard.png" alt="Dashboard" width="800"/>
+  
+  <h3>Review Analytics</h3>
+  <img src="public/docs/screenshots/analytics.png" alt="Analytics" width="800"/>
+  
+  <h3>Business Profile</h3>
+  <img src="public/docs/screenshots/profile.png" alt="Profile" width="800"/>
+</div>
