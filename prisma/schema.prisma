@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String       @id @default(cuid())
+  name                   String?
+  email                  String       @unique
+  emailVerified          DateTime?
+  image                  String?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  phone                  String?
+  role                   String?
+  lastLoginAt            DateTime?
+  stripeCustomerId       String?      @unique
+  stripeSubscriptionId   String?      @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+  accounts               Account[]
+  sessions               Session[]
+  team                   TeamMember[]
+  business               Business?
+}
+
+model Business {
+  id                 String       @id @default(cuid())
+  name               String?
+  description        String?
+  website            String?
+  phone              String?
+  email              String?
+  address            String?
+  city               String?
+  state              String?
+  zipCode            String?
+  country            String?
+  industry           String?
+  size               String?
+  foundedYear        Int?
+  yelpId             String?      @unique
+  yelpUrl            String?
+  yelpRating         Float?
+  yelpReviewCount    Int?
+  lastYelpSync       DateTime?
+  googlePlaceId      String?
+  googleBusinessName String?
+  googleBusinessUrl  String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  ownerId            String       @unique
+  customers          Customer[]
+  reviews            Review[]
+  team               TeamMember[]
+  workflows          Workflow[]
+  owner              User         @relation(fields: [ownerId], references: [id])
+  syncLogs           SyncLog[]
+}
+
+model TeamMember {
+  id           String   @id @default(cuid())
+  role         String
+  inviteStatus String
+  inviteEmail  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String?
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@unique([businessId, inviteEmail])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id             String   @id @default(cuid())
+  source         String
+  rating         Int
+  text           String
+  authorName     String?
+  authorEmail    String?
+  isVerified     Boolean  @default(false)
+  reviewDate     DateTime
+  sourceReviewId String?
+  sourceUrl      String?
+  sentiment      String?
+  aiSummary      String?
+  keywords       String[]
+  topics         String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  businessId     String
+  lastSynced     DateTime?
+  business       Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, source, sourceReviewId])
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  firstName   String?
+  lastName    String?
+  email       String?
+  phone       String
+  lastContact DateTime?
+  tags        String[]
+  notes       String?
+  status      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id])
+  messages    Message[]
+}
+
+model Workflow {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  isActive        Boolean   @default(true)
+  messageTemplate String
+  frequency       String
+  lastRun         DateTime?
+  nextRun         DateTime?
+  settings        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  businessId      String
+  messages        Message[]
+  business        Business  @relation(fields: [businessId], references: [id])
+}
+
+model Message {
+  id                String    @id @default(cuid())
+  type              String
+  content           String
+  status            String
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  failedAt          DateTime?
+  errorMessage      String?
+  provider          String
+  providerMessageId String?
+  cost              Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  customerId        String
+  workflowId        String?
+  customer          Customer  @relation(fields: [customerId], references: [id])
+  workflow          Workflow? @relation(fields: [workflowId], references: [id])
+}
+
+model SyncLog {
+  id            String   @id @default(cuid())
+  businessId    String
+  source        String
+  timestamp     DateTime @default(now())
+  status        String
+  reviewsSynced Int      @default(0)
+  duration      Int
+  error         String?
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, source])
+}
